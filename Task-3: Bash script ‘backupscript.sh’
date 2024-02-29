@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# MySQL database credentials
+DB_USER="raisal"
+DB_PASS="190198"
+DB_NAME="test"
+
+# Backup directory
+BACKUP_DIR="/home/raisal/Backup"
+
+# Backup filename
+DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_FILE="$BACKUP_DIR/$DB_NAME-$DATE.sql"
+
+# Print current backup file name
+echo "Current backup file name: $BACKUP_FILE"
+
+# MySQL dump command
+mysqldump -u$DB_USER -p$DB_PASS $DB_NAME > $BACKUP_FILE
+
+# Check if backup succeeded
+if [ $? -eq 0 ]; then
+    echo "MySQL backup successfully created: $BACKUP_FILE"
+else
+    echo "Error: MySQL backup failed!"
+fi
+
+# To upload the generated backup file to S3 using AWS CLI.
+aws s3 cp $BACKUP_FILE s3://s3bucket.backup/
