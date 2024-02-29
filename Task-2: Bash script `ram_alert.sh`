@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Function to calculate RAM usage
+calculate_ram_usage() {
+    ram=$(free -m | grep Mem | awk '{print $3}')
+    total_ram=$(free -m | grep Mem | awk '{print $2}')
+    ram_usage=$((ram * 100 / total_ram))
+    echo "RAM Usage: $ram_usage%"
+}
+
+# Function to send alert to Slack
+send_slack_alert() {
+    webhook_url="https://hooks.slack.com/services/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"
+    message="$1"
+
+    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$message\"}" $webhook_url
+}
+
+# Main function
+main() {
+    ram_usage=$(calculate_ram_usage)
+    message="Current RAM Usage: $ram_usage"
+    send_slack_alert "$message"
+}
+
+main
