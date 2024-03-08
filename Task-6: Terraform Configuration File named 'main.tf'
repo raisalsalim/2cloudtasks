@@ -1,0 +1,62 @@
+sudo nano main.tf
+
+# main.tf
+
+# Configure AWS provider
+provider "aws" {
+  region = "ap-south-1"
+}
+
+# Create EC2 instance
+resource "aws_instance" "ec2_instance" {
+  ami           = "ami-03bb6d83c60fc5f7c"
+  instance_type = "t2.micro"
+  key_name      = "my-keypair"
+  subnet_id     = "subnet-0605c12fecc189e4e"
+  tags = {
+    Name = "EC2Terraform"
+  }
+}
+
+# Create security group for EC2 instance
+resource "aws_security_group" "ec2_security_group" {
+  name        = "EC2SecurityGroup"
+  description = "EC2 Security Group"
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# Create security group for RDS instance
+resource "aws_security_group" "rds_security_group" {
+  name        = "RDSSecurityGroup"
+  description = "RDS Security Group"
+}
+
+# Create ingress rule in RDS security group
+resource "aws_security_group_rule" "rds_ingress_rule" {
+  type              = "ingress"
+  from_port         = 3306
+  to_port           = 3306
+  protocol          = "tcp"
+  security_group_id = aws_security_group.rds_security_group.id
+  source_security_group_id = aws_security_group.ec2_security_group.id
+}
+
+# Create RDS instance
+resource "aws_db_instance" "rds_instance" {
+  allocated_storage    = 20
+  engine               = "mysql"
+  instance_class       = "db.t2.micro"
+  identifier           = "rds-terraform"  # Specify the DB instance identifier
+  username             = "admin"
+  password             = "mypassword"  # Replace with your desired password
+  publicly_accessible = false
+  vpc_security_group_ids = [
+    aws_security_group.rds_security_group.id
+  ]
+}
